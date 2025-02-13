@@ -113,7 +113,7 @@ class DataProcessor:
         )
         return docs
 
-    def split_documents(self, docs, chunk_size=1500, chunk_overlap=100):
+    def split_documents(self, docs, chunk_size=4000, chunk_overlap=300):
         """
         Splits documents into chunks for vectorization.
         """
