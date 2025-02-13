@@ -20,6 +20,8 @@ class RAGPipeline:
         model_name="meta-llama/Llama-3.2-3B-Instruct",
         load_mode="local",
         api_token=None,
+        use_history=True,
+        max_history=4,
     ):
         """
         Initializes the RAGPipeline with retrieval and generation components.
@@ -36,7 +38,15 @@ class RAGPipeline:
 
         - api_token: str, Hugging Face API token, required if load_mode is "api".
 
+        - use_history: bool, whether to keep track of conversation history.
+
+        - max_history: int, maximum number of recent question-answer pairs to remember (default: 4).
+
         """
+
+        self.use_history = use_history
+        self.max_history = max_history  # Limit the history length
+
         # Set up document retriever
         self.retriever = DocumentRetriever(
             vectordb_path=vectordb_path, embedding_model_name=embedding_model_name
@@ -69,8 +79,8 @@ class RAGPipeline:
         doc_text = "\n\n".join(doc.page_content for doc in docs)
         sources = [doc.metadata["source"] for doc in docs]
 
-        # Format conversation history if available
-        if self.history:
+        # Format conversation history if available. Include conversation history only if enabled
+        if self.use_history and self.history:
             history_text = "\n".join(
                 [f"user: {q}\nassistant: {a}" for q, a in self.history]
             )
@@ -180,7 +190,17 @@ class RAGPipeline:
         response = self.rag_chain.invoke(question)
 
         # Add current question and response to history
-        self.history.append((question, response))
+        # Record history only if enabled
+        if self.use_history:
+            self.history.append((question, response))
+
+        # Update history **only if it's not already added**
+        if self.use_history:
+            if len(self.history) == 0 or self.history[-1] != (question, response):
+                self.history.append((question, response))
+
+            # Keep only the last `max_history` pairs
+            self.history = self.history[-self.max_history :]
 
         # Deduplicate sources
         unique_sources = list(set(sources))
