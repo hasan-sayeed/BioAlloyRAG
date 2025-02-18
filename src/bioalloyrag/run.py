@@ -49,7 +49,9 @@ def main(
             shutil.rmtree(vectordb_path)  # Remove the existing vectordb directory
 
         print(f"Processing new documents from: {data_path}")
-        process_data = DataProcessor(data_path=data_path, vectordb_path=vectordb_path)
+        process_data = DataProcessor(
+            input_data_path=data_path, vectordb_path=vectordb_path
+        )
         process_data.process_and_create_db()
     elif not os.path.exists(vectordb_path) or not any(Path(vectordb_path).iterdir()):
         print(
@@ -58,7 +60,9 @@ def main(
         data_path = input(
             "Please enter the path to your directory of PDF files here: "
         ).strip()
-        process_data = DataProcessor(data_path=data_path, vectordb_path=vectordb_path)
+        process_data = DataProcessor(
+            input_data_path=data_path, vectordb_path=vectordb_path
+        )
         process_data.process_and_create_db()
     else:
         print(
